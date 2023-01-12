@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import Navbar from "./Navbar"
 import CategorySelection from "./CategorySelection"
 import Home from "./Home"
@@ -13,8 +13,30 @@ const seedEntries = [
 ]
 
 const App = () => {
-  const [entries, setEntries] = useState(seedEntries)
+  const [entries, setEntries] = useState([])
   const nav = useNavigate()
+  const [categories, setCategories] = useState([])
+
+  // Only on mount
+  useEffect(() => {
+    async function getCategories() {
+      const res = await fetch('http://localhost:4001/categories')
+      const data = await res.json()
+      setCategories(data)
+    }
+    getCategories()
+  }, [])
+
+
+  // Only on mount
+  useEffect(() => {
+    async function fetchEntries() {
+      const res = await fetch('http://localhost:4001/entries')
+      const data = await res.json()
+      setEntries(data)
+    }
+    fetchEntries() 
+  }, [])
 
   // HOC (higher-order component)
   const ShowEntryWrapper = () => {
@@ -23,14 +45,25 @@ const App = () => {
     return the_entry ? <ShowEntry entry={the_entry} /> : <h4>Entry not found!</h4>
   }
 
-  const addEntry = (category, content) => {
+  const addEntry = async (category, content) => {
     const id = entries.length
+    // const categoryObject = categories.find((cat => cat.name === category))
     // Add a new entry
     const newEntry = {
       category: category,
-      content: content,
+      content: content
     }
-    setEntries([...entries, newEntry])
+    // Post new entry to API
+    const returnedEntry = await fetch('http://localhost:4001/entries', {
+      method: 'POST',
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(newEntry)
+    })
+    const data = await returnedEntry.json()
+    setEntries([...entries, data])
     nav(`/entry/${id}`)
   }
 
@@ -39,7 +72,7 @@ const App = () => {
       <Navbar />
       <Routes>
         <Route path="/" element={<Home entries={entries} />} />
-        <Route path="/category" element={<CategorySelection />} />
+        <Route path="/category" element={<CategorySelection categories={categories} />} />
         <Route path="/entry/:id" element={<ShowEntryWrapper />} />
         <Route path="/entry/new/:category" element={<NewEntry addEntry={addEntry} />} />
         <Route path="*" element={<h4>Page not found!</h4>} />
