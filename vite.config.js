@@ -7,5 +7,8 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true
+  },
+  preview: {
+    port: provess.env.PORT || 8001
   }
 })
