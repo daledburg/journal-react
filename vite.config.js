@@ -9,6 +9,6 @@ export default defineConfig({
     globals: true
   },
   preview: {
-    port: provess.env.PORT || 8001
+    port: process.env.PORT || 8001
   }
 })
